@@ -28,9 +28,9 @@ import com.svlada.security.auth.jwt.extractor.TokenExtractor;
 
 /**
  * WebSecurityConfig
- * 
- * @author vladimir.stankovic
  *
+ * @author vladimir.stankovic
+ * <p>
  * Aug 3, 2016
  */
 @Configuration
@@ -41,17 +41,25 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     public static final String REFRESH_TOKEN_URL = "/api/auth/token";
     public static final String API_ROOT_URL = "/api/**";
 
-    @Autowired private RestAuthenticationEntryPoint authenticationEntryPoint;
-    @Autowired private AuthenticationSuccessHandler successHandler;
-    @Autowired private AuthenticationFailureHandler failureHandler;
-    @Autowired private AjaxAuthenticationProvider ajaxAuthenticationProvider;
-    @Autowired private JwtAuthenticationProvider jwtAuthenticationProvider;
+    @Autowired
+    private RestAuthenticationEntryPoint authenticationEntryPoint;
+    @Autowired
+    private AuthenticationSuccessHandler successHandler;
+    @Autowired
+    private AuthenticationFailureHandler failureHandler;
+    @Autowired
+    private AjaxAuthenticationProvider ajaxAuthenticationProvider;
+    @Autowired
+    private JwtAuthenticationProvider jwtAuthenticationProvider;
 
-    @Autowired private TokenExtractor tokenExtractor;
+    @Autowired
+    private TokenExtractor tokenExtractor;
 
-    @Autowired private AuthenticationManager authenticationManager;
+    @Autowired
+    private AuthenticationManager authenticationManager;
 
-    @Autowired private ObjectMapper objectMapper;
+    @Autowired
+    private ObjectMapper objectMapper;
 
     protected AjaxLoginProcessingFilter buildAjaxLoginProcessingFilter(String loginEntryPoint) throws Exception {
         AjaxLoginProcessingFilter filter = new AjaxLoginProcessingFilter(loginEntryPoint, successHandler, failureHandler, objectMapper);
@@ -62,7 +70,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     protected JwtTokenAuthenticationProcessingFilter buildJwtTokenAuthenticationProcessingFilter(List<String> pathsToSkip, String pattern) throws Exception {
         SkipPathRequestMatcher matcher = new SkipPathRequestMatcher(pathsToSkip, pattern);
         JwtTokenAuthenticationProcessingFilter filter
-            = new JwtTokenAuthenticationProcessingFilter(failureHandler, tokenExtractor, matcher);
+                = new JwtTokenAuthenticationProcessingFilter(failureHandler, tokenExtractor, matcher);
         filter.setAuthenticationManager(this.authenticationManager);
         return filter;
     }
@@ -78,35 +86,32 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         auth.authenticationProvider(ajaxAuthenticationProvider);
         auth.authenticationProvider(jwtAuthenticationProvider);
     }
-    
+
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         List<String> permitAllEndpointList = Arrays.asList(
-            AUTHENTICATION_URL,
-            REFRESH_TOKEN_URL,
-            "/console"
+                AUTHENTICATION_URL,
+                REFRESH_TOKEN_URL,
+                "/console"
         );
 
-        http
-            .csrf().disable() // We don't need CSRF for JWT based authentication
-            .exceptionHandling()
-            .authenticationEntryPoint(this.authenticationEntryPoint)
-
-            .and()
+        http.csrf().disable() // We don't need CSRF for JWT based authentication
+                .exceptionHandling()
+                .authenticationEntryPoint(this.authenticationEntryPoint)
+                .and()
                 .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-
-            .and()
+                .and()
                 .authorizeRequests()
-                .antMatchers(permitAllEndpointList.toArray(new String[permitAllEndpointList.size()]))
+                .antMatchers(permitAllEndpointList.toArray(new String[0]))
                 .permitAll()
-            .and()
+                .and()
                 .authorizeRequests()
                 .antMatchers(API_ROOT_URL).authenticated() // Protected API End-points
-            .and()
+                .and()
                 .addFilterBefore(new CustomCorsFilter(), UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(buildAjaxLoginProcessingFilter(AUTHENTICATION_URL), UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(buildJwtTokenAuthenticationProcessingFilter(permitAllEndpointList,
-                API_ROOT_URL), UsernamePasswordAuthenticationFilter.class);
+                        API_ROOT_URL), UsernamePasswordAuthenticationFilter.class);
     }
 }

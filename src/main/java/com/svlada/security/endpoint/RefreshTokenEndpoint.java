@@ -36,25 +36,31 @@ import com.svlada.security.model.token.RefreshToken;
 
 /**
  * RefreshTokenEndpoint
- * 
- * @author vladimir.stankovic
  *
+ * @author vladimir.stankovic
+ * <p>
  * Aug 17, 2016
  */
 @RestController
 public class RefreshTokenEndpoint {
-    @Autowired private JwtTokenFactory tokenFactory;
-    @Autowired private JwtSettings jwtSettings;
-    @Autowired private UserService userService;
-    @Autowired private TokenVerifier tokenVerifier;
-    @Autowired @Qualifier("jwtHeaderTokenExtractor") private TokenExtractor tokenExtractor;
-    
-    @RequestMapping(value="/api/auth/token", method=RequestMethod.GET, produces={ MediaType.APPLICATION_JSON_VALUE })
-    public @ResponseBody JwtToken refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+    @Autowired
+    private JwtTokenFactory tokenFactory;
+    @Autowired
+    private JwtSettings jwtSettings;
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private TokenVerifier tokenVerifier;
+    @Autowired
+    @Qualifier("jwtHeaderTokenExtractor")
+    private TokenExtractor tokenExtractor;
+
+    @RequestMapping(value = "/api/auth/token", method = RequestMethod.GET, produces = {MediaType.APPLICATION_JSON_VALUE})
+    public JwtToken refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
         String tokenPayload = tokenExtractor.extract(request.getHeader(WebSecurityConfig.AUTHENTICATION_HEADER_NAME));
-        
+
         RawAccessJwtToken rawToken = new RawAccessJwtToken(tokenPayload);
-        RefreshToken refreshToken = RefreshToken.create(rawToken, jwtSettings.getTokenSigningKey()).orElseThrow(() -> new InvalidJwtToken());
+        RefreshToken refreshToken = RefreshToken.create(rawToken, jwtSettings.getTokenSigningKey()).orElseThrow(InvalidJwtToken::new);
 
         String jti = refreshToken.getJti();
         if (!tokenVerifier.verify(jti)) {
